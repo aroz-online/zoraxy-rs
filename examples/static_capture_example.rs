@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use axum::Router;
 use axum::body::Body;
+use axum::handler::HandlerWithoutStateExt;
 use axum::http::Request;
 use axum::response::Html;
 use axum::routing::get;
@@ -30,6 +31,27 @@ fn introspect() -> IntroSpect {
         .with_ui_path(UI_PATH)
 }
 
+async fn default_handler(req: Request<Body>) -> Html<String> {
+    Html(format!(
+        "This request is captured by the default handler!<br/>Request URI: {}",
+        req.uri()
+    ))
+}
+
+async fn handler_a(req: Request<Body>) -> Html<String> {
+    Html(format!(
+        "This request is captured by A handler!<br/>Request URI: {}",
+        req.uri()
+    ))
+}
+
+async fn handler_b(req: Request<Body>) -> Html<String> {
+    Html(format!(
+        "This request is captured by B handler!<br/>Request URI: {}",
+        req.uri()
+    ))
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &introspect())?;
@@ -38,26 +60,11 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    let mut path_router = StaticPathRouter::new(|req: Request<Body>| async move {
-        Html(format!(
-            "This request is captured by the default handler!<br/>Request URI: {}",
-            req.uri()
-        ))
-    });
+    let mut path_router = StaticPathRouter::new(default_handler.into_service());
 
-    path_router.register_path_handler("/test_a", |req: Request<Body>| async move {
-        Html(format!(
-            "This request is captured by A handler!<br/>Request URI: {}",
-            req.uri()
-        ))
-    });
+    path_router.register_path_service("/test_a", handler_a.into_service());
 
-    path_router.register_path_handler("/test_b", |req: Request<Body>| async move {
-        Html(format!(
-            "This request is captured by B handler!<br/>Request URI: {}",
-            req.uri()
-        ))
-    });
+    path_router.register_path_service("/test_b", handler_b.into_service());
 
     let static_capture = Arc::new(path_router).into_capture_service();
 

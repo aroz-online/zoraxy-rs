@@ -7,70 +7,84 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::task::{Context, Poll};
 
 use axum::body::Body;
+use axum::handler::HandlerWithoutStateExt;
+use axum::handler::future::IntoServiceFuture;
 use axum::http::{Request, Uri};
 use axum::response::{IntoResponse, Response};
 use tower::Service;
+use tower::util::BoxCloneSyncService;
 use tracing::{debug, warn};
 
 const CAPTURE_HEADER: &str = "x-zoraxy-capture";
 const ORIGINAL_URI_HEADER: &str = "x-zoraxy-uri";
 
-type HandlerFuture = Pin<Box<dyn Future<Output = Response> + Send + 'static>>;
-type SharedCaptureHandler = Arc<dyn CaptureHandler + Send + Sync>;
-
-/// Trait alias for anything that can be invoked as a static-capture handler.
-pub trait CaptureHandler: Send + Sync + 'static {
-    fn call(&self, req: Request<Body>) -> HandlerFuture;
-}
-
-impl<F, Fut, R> CaptureHandler for F
-where
-    F: Fn(Request<Body>) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = R> + Send + 'static,
-    R: IntoResponse + 'static,
-{
-    fn call(&self, req: Request<Body>) -> HandlerFuture {
-        let fut = (self)(req);
-        Box::pin(async move { fut.await.into_response() })
-    }
-}
-
 /// Router that mimics the Go plugin static path capture behavior atop Axum services.
 pub struct StaticPathRouter {
-    handlers: HashMap<String, SharedCaptureHandler>,
-    default_handler: SharedCaptureHandler,
+    handlers: HashMap<String, BoxCloneSyncService<Request<Body>, Response, Infallible>>,
+    default_handler: BoxCloneSyncService<Request<Body>, Response, Infallible>,
     debug_enabled: AtomicBool,
 }
 
 impl Default for StaticPathRouter {
     fn default() -> Self {
-        Self::new(|_req: Request<Body>| async move {
+        async fn default_handler(_req: Request<Body>) -> impl IntoResponse {
             (
                 axum::http::StatusCode::NOT_FOUND,
                 "No capture handler registered",
             )
                 .into_response()
-        })
+        }
+
+        #[derive(Clone)]
+        struct DefaultHandlerService;
+
+        impl Service<Request<Body>> for DefaultHandlerService {
+            type Response = Response;
+            type Error = Infallible;
+            type Future = IntoServiceFuture<Pin<Box<dyn Future<Output = Response> + Send>>>;
+
+            fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                Poll::Ready(Ok(()))
+            }
+
+            fn call(&mut self, req: Request<Body>) -> Self::Future {
+                default_handler.into_service().call(req)
+            }
+        }
+
+        Self::new(DefaultHandlerService)
     }
 }
 
 impl StaticPathRouter {
-    pub fn new(default_handler: impl CaptureHandler + 'static) -> Self {
-        let default_handler: SharedCaptureHandler =
-            Arc::new(default_handler) as SharedCaptureHandler;
+    pub fn new<H>(default_handler: H) -> Self
+    where
+        H: Service<Request<Body>, Response = Response, Error = Infallible>
+            + Send
+            + Sync
+            + Clone
+            + 'static,
+        H::Future: Send + 'static,
+    {
         Self {
             handlers: HashMap::new(),
-            default_handler,
+            default_handler: BoxCloneSyncService::new(default_handler),
             debug_enabled: AtomicBool::new(false),
         }
     }
 
-    pub fn register_path_handler<H>(&mut self, path: impl AsRef<str>, handler: H)
+    pub fn register_path_service<H>(&mut self, path: impl AsRef<str>, handler: H)
     where
-        H: CaptureHandler + Send + Sync + 'static,
+        H: Service<Request<Body>, Response = Response, Error = Infallible>
+            + Send
+            + Sync
+            + Clone
+            + 'static,
+        H::Future: Send + 'static,
     {
         let normalized = normalize_capture_path(path.as_ref());
-        let handler: SharedCaptureHandler = Arc::new(handler) as SharedCaptureHandler;
+        let handler: BoxCloneSyncService<Request<Body>, Response, Infallible> =
+            BoxCloneSyncService::new(handler);
         self.handlers.insert(normalized, handler);
     }
 
@@ -87,21 +101,16 @@ impl StaticPathRouter {
         self.debug_enabled.load(Ordering::Relaxed)
     }
 
-    fn handler_for_path(&self, path: &str) -> Option<SharedCaptureHandler> {
-        self.handlers.get(path).cloned()
-    }
-
-    fn fallback_handler(&self) -> SharedCaptureHandler {
-        self.default_handler.clone()
-    }
-
     fn log_capture_path(&self, capture_path: &str) {
         if self.debug_enabled() {
             debug!(target: "zoraxy::static_router", capture_path, "Using capture path");
         }
     }
 
-    pub(crate) async fn dispatch_capture(&self, mut req: Request<Body>) -> Response {
+    pub(crate) async fn dispatch_capture(
+        &self,
+        mut req: Request<Body>,
+    ) -> Result<Response, Infallible> {
         if let Some(capture_path) = header_value(req.headers().get(CAPTURE_HEADER)) {
             let normalized_path = normalize_capture_path(&capture_path);
             self.log_capture_path(&normalized_path);
@@ -112,12 +121,12 @@ impl StaticPathRouter {
                 warn!(target: "zoraxy::static_router", %original_uri, %err, "Failed to rewrite request URI");
             }
 
-            if let Some(handler) = self.handler_for_path(&normalized_path) {
+            if let Some(mut handler) = self.handlers.get(&normalized_path).cloned() {
                 return handler.call(req).await;
             }
         }
 
-        self.fallback_handler().call(req).await
+        self.default_handler.clone().call(req).await
     }
 
     pub const fn into_capture_service(self: Arc<Self>) -> StaticCaptureService {
@@ -169,6 +178,6 @@ impl Service<Request<Body>> for StaticCaptureService {
 
     fn call(&mut self, req: Request<Body>) -> Self::Future {
         let router = self.router.clone();
-        Box::pin(async move { Ok(router.dispatch_capture(req).await) })
+        Box::pin(async move { router.dispatch_capture(req).await })
     }
 }
