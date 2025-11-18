@@ -39,7 +39,7 @@ impl DynamicSniffForwardRequest {
         self.request_uuid = value;
     }
 
-    pub fn raw_request(&self) -> Option<&Request<Body>> {
+    pub const fn raw_request(&self) -> Option<&Request<Body>> {
         self.raw_request.as_ref()
     }
 
@@ -71,11 +71,11 @@ where
     async fn from_request(req: axum::extract::Request, _: &S) -> Result<Self, Self::Rejection> {
         let (mut parts, body) = req.into_parts();
         let bytes = body::to_bytes(body, DEFAULT_SNIFF_BODY_LIMIT).await?;
-        let mut payload: DynamicSniffForwardRequest = serde_json::from_slice(&bytes)?;
+        let mut payload: Self = serde_json::from_slice(&bytes)?;
         let request_uuid = parts
             .headers
             .remove(REQUEST_ID_HEADER)
-            .and_then(|value| value.to_str().ok().map(|s| s.to_string()));
+            .and_then(|value| value.to_str().ok().map(std::string::ToString::to_string));
         payload.set_request_uuid(request_uuid);
         payload.set_raw_request(Some(Request::from_parts(parts, Body::from(bytes))));
         Ok(payload)
@@ -91,8 +91,8 @@ pub enum SniffDecision {
 impl IntoResponse for SniffDecision {
     fn into_response(self) -> Response {
         match self {
-            SniffDecision::Accept => (StatusCode::OK, "OK").into_response(),
-            SniffDecision::Skip => (StatusCode::NOT_IMPLEMENTED, "SKIP").into_response(),
+            Self::Accept => (StatusCode::OK, "OK").into_response(),
+            Self::Skip => (StatusCode::NOT_IMPLEMENTED, "SKIP").into_response(),
         }
     }
 }
