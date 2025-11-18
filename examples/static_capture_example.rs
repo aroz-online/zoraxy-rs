@@ -10,10 +10,8 @@ use zoraxy_rs::prelude::*;
 
 const UI_PATH: &str = "/ui";
 const UI_PATH_SLASH: &str = "/ui/";
-const UI_PATH_WILDCARD: &str = "/ui/*rest";
 const STATIC_CAPTURE_INGRESS: &str = "/s_capture";
 const STATIC_CAPTURE_INGRESS_SLASH: &str = "/s_capture/";
-const STATIC_CAPTURE_INGRESS_WILDCARD: &str = "/s_capture/*rest";
 
 fn introspect() -> IntroSpect {
     let metadata = PluginMetadata::new(PluginType::Router)
@@ -24,7 +22,7 @@ fn introspect() -> IntroSpect {
         .with_description("An example Zoraxy plugin demonstrating static path capture routing.")
         .with_url("https://zoraxy.aroz.org")
         .with_version((1, 0, 0));
-    let settings = StaticCaptureSettings::new("/s_capture")
+    let settings = StaticCaptureSettings::new(STATIC_CAPTURE_INGRESS)
         .add_static_capture_path("/test_a")
         .add_static_capture_path("/test_b");
     IntroSpect::new(metadata)
@@ -64,12 +62,8 @@ async fn main() -> anyhow::Result<()> {
     let static_capture = Arc::new(path_router).into_capture_service();
 
     let app = Router::new()
-        .route_service(STATIC_CAPTURE_INGRESS, static_capture.clone())
-        .route_service(STATIC_CAPTURE_INGRESS_SLASH, static_capture.clone())
-        .route_service(STATIC_CAPTURE_INGRESS_WILDCARD, static_capture)
-        .route(UI_PATH, get(render_debug_ui))
         .route(UI_PATH_SLASH, get(render_debug_ui))
-        .route(UI_PATH_WILDCARD, get(render_debug_ui));
+        .route_service(STATIC_CAPTURE_INGRESS_SLASH, static_capture);
 
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
     let listener = tokio::net::TcpListener::bind(addr).await?;
