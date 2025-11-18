@@ -1,0 +1,19 @@
+name: CI
+on: [push, pull_request]
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Install Rust
+              run: rustup update stable && rustup default stable
+            - name: Build
+              run: cargo build --verbose
+            - name: Run tests
+              run: cargo test --verbose
+            - name: Run examples
+              run: cargo run --example static_capture_example -- -introspect
+            - name: Format check
+              run: cargo fmt -- --check
+            - name: Clippy check
+              run: cargo clippy --all-features -- -D warnings -W clippy::pedantic -W clippy::nursery -W rust-2018-idioms
