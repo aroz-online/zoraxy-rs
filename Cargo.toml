@@ -8,12 +8,15 @@ anyhow = "1.0.100"
 axum = "0.8.7"
 rstest = "0.26.1"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = { version = "1.0.145", features = ["preserve_order"] }
 tower = "0.5.1"
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.40"
+include_dir = "0.7.4"
+mime_guess = "2.0.5"
 
 [dev-dependencies]
+http-body-util = "0.1.2"
 pretty_assertions = "1.4.1"
 rstest = "0.26.1"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }

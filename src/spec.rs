@@ -168,8 +168,8 @@ mod tests {
   "ui_path": "/event-subscriptions",
   "subscription_path": "/notifyme",
   "subscription_events": {
-    "accessRuleCreated": "Triggered when access rule is created",
-    "blacklistToggled": "Triggered when blacklist is toggled"
+    "blacklistToggled": "Triggered when blacklist is toggled",
+    "accessRuleCreated": "Triggered when access rule is created"
   }
 }"#
     }
