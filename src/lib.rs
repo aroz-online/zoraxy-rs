@@ -1,3 +1,4 @@
+pub mod dynamic_router;
 pub mod embed_webserver;
 pub mod prelude;
 pub mod spec;
