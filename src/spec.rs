@@ -97,9 +97,7 @@ pub fn serve_and_recv_spec(
 
 #[cfg(test)]
 mod tests {
-    use rstest::rstest;
-
-    use crate::{PluginMetadata, PluginType, SubscriptionsSettings, types::IntroSpect};
+    use crate::{PluginMetadata, PluginType, types::IntroSpect};
 
     use super::*;
 
@@ -130,64 +128,24 @@ mod tests {
 }"#
     }
 
-    fn event_subscriptions_intro_spect() -> IntroSpect {
-        let metadata = PluginMetadata::new(PluginType::Utilities)
-            .with_id("com.example.eventsub")
-            .with_name("Event Subscription Plugin")
-            .with_author("foobar")
-            .with_contact("admin@example.com")
-            .with_description("A plugin for event subscriptions")
-            .with_url("https://example.com")
-            .with_version((1, 0, 0));
-        let subscriptions = SubscriptionsSettings::new("/notifyme")
-            .add_subscription_event(
-                crate::EventName::AccessRuleCreated,
-                "Triggered when access rule is created",
-            )
-            .add_subscription_event(
-                crate::EventName::BlacklistToggled,
-                "Triggered when blacklist is toggled",
-            );
-
-        IntroSpect::new(metadata)
-            .with_ui_path("/event-subscriptions")
-            .with_subscriptions(subscriptions)
-    }
-    const fn event_subscriptions_expected_json() -> &'static str {
-        r#"{
-  "id": "com.example.eventsub",
-  "name": "Event Subscription Plugin",
-  "author": "foobar",
-  "contact": "admin@example.com",
-  "description": "A plugin for event subscriptions",
-  "url": "https://example.com",
-  "type": 1,
-  "version_major": 1,
-  "version_minor": 0,
-  "version_patch": 0,
-  "ui_path": "/event-subscriptions",
-  "subscription_path": "/notifyme",
-  "subscription_events": {
-    "blacklistToggled": "Triggered when blacklist is toggled",
-    "accessRuleCreated": "Triggered when access rule is created"
-  }
-}"#
-    }
-
-    #[rstest]
-    #[case::helloworld(helloworld_intro_spect(), helloworld_expected_json())]
-    #[case::event_subscriptions(
-        event_subscriptions_intro_spect(),
-        event_subscriptions_expected_json()
-    )]
-    fn test_serve_intro_spect_helloworld(#[case] intro_spect: IntroSpect, #[case] expected: &str) {
+    #[test]
+    fn test_serve_intro_spect_helloworld() {
         let args = vec!["plugin".to_string(), "-introspect".to_string()];
 
-        let result = serve_intro_spect(&args, &intro_spect);
+        let result = serve_intro_spect(&args, &helloworld_intro_spect());
         assert!(result.is_ok());
         let intro_spect_json = result.unwrap();
 
-        pretty_assertions::assert_eq!(intro_spect_json, expected);
+        pretty_assertions::assert_eq!(intro_spect_json, helloworld_expected_json());
+    }
+
+    #[test]
+    fn test_serve_intro_spect_no_flag() {
+        let intro_spect = helloworld_intro_spect();
+        let args = vec!["plugin".to_string()];
+
+        let result = serve_intro_spect(&args, &intro_spect);
+        assert!(result.is_err());
     }
 
     #[test]

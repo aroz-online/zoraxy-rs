@@ -2,7 +2,9 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum EventName {
     /// emitted when a blacklisted IP is blocked

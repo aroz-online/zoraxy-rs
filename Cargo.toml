@@ -6,7 +6,6 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.100"
 axum = { version = "0.8.7", features = ["macros"] }
-rstest = "0.26.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
 tower = "0.5.1"
@@ -19,5 +18,5 @@ thiserror = "2.0.17"
 [dev-dependencies]
 http-body-util = "0.1.2"
 pretty_assertions = "1.4.1"
-rstest = "0.26.1"
+# rstest = "0.26.1"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
