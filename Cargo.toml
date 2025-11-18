@@ -1,6 +1,9 @@
 [package]
 name = "zoraxy-rs"
 version = "0.1.0"
+authors = [
+    "Anthony Rubick <68485672+AnthonyMichaelTDM@users.noreply.github.com>",
+]
 edition = "2024"
 
 [dependencies]
