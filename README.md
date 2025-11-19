@@ -1,8 +1,8 @@
 # Zoraxy-rs
 
-Zoraxy-rs is a Rust crate for building plugins for the Zoraxy Reverse Proxy.
+Zoraxy-rs is a Rust crate for building plugins for [Zoraxy](https://github.com/tobychui/zoraxy)
 
-It currently isn't verified to actually work, but it should work in theory.
+The examples have been verified to work with Zoraxy v3.2.9
 
 ## Oddities
 
