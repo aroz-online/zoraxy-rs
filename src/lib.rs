@@ -14,18 +14,22 @@ pub use prelude::*;
 /// # Arguments
 /// * `debug` - A boolean indicating whether to set the logging level to debug or info
 pub fn init_tracing_subscriber(debug: bool) {
-    let level = if debug { "debug" } else { "info" };
+    let level = if debug {
+        tracing::level_filters::LevelFilter::DEBUG
+    } else {
+        tracing::level_filters::LevelFilter::INFO
+    };
 
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env().add_directive(level.parse().unwrap()),
+            tracing_subscriber::EnvFilter::from_default_env().add_directive(level.into()),
         )
         .without_time()
         .with_ansi(false)
         .init();
 }
 
-/// Starts the axum web server for the plugin, handling termination signals from Zoraxy if the ui_path is provided.
+/// Starts the axum web server for the plugin, handling termination signals from Zoraxy if the `ui_path` is provided.
 /// # Arguments
 /// * `app` - The axum Router instance to serve.
 /// * `state` - The shared state to be used by the axum application.
@@ -75,8 +79,8 @@ where
         }
         result = server_future => {
             if let Err(e) = result {
-                tracing::error!("Axum server error: {:?}", e);
-                Err(anyhow::anyhow!("Axum server error: {:?}", e))
+                tracing::error!("Axum server error: {e:?}",);
+                Err(anyhow::anyhow!("Axum server error: {e:?}",))
             } else {
                 tracing::info!("Axum server has shut down.");
                 Ok(())
