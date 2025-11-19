@@ -1,3 +1,5 @@
+![crates.io](https://img.shields.io/crates/v/zoraxy-rs)
+
 # Zoraxy-rs
 
 Zoraxy-rs is a Rust crate for building plugins for [Zoraxy](https://github.com/tobychui/zoraxy)
