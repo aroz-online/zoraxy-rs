@@ -11,29 +11,29 @@ use crate::EventName;
 pub struct IntroSpect {
     /// Plugin metadata
     #[serde(flatten)]
-    pub metadata: PluginMetadata,
+    metadata: PluginMetadata,
     /// Static Capture Settings
     #[serde(flatten)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub static_capture_settings: Option<StaticCaptureSettings>,
+    static_capture_settings: Option<StaticCaptureSettings>,
     /// Dynamic Capture Settings
     #[serde(flatten)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dynamic_capture_settings: Option<DynamicCaptureSettings>,
+    dynamic_capture_settings: Option<DynamicCaptureSettings>,
     /// UI Path for your plugin
     /// e.g. /ui
     /// Will proxy the whole subpath tree to Zoraxy Web UI as plugin UI
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ui_path: Option<String>,
+    ui_path: Option<String>,
     /// Subscriptions Settings
     #[serde(flatten)]
-    pub subscriptions: Option<SubscriptionsSettings>,
+    subscriptions: Option<SubscriptionsSettings>,
 
     /// API Access Control
     /// List of API endpoints this plugin can access,
     /// and a description of why the plugin needs to access this endpoint
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub permitted_api_endpoints: Vec<PermittedApiEndpoint>,
+    permitted_api_endpoints: Vec<PermittedApiEndpoint>,
 }
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -41,28 +41,28 @@ pub struct PluginMetadata {
     /// Unique ID of your plugin
     /// recommended to use reverse domain name notation
     /// e.g. "com.yourdomain.pluginname"
-    pub id: String,
+    id: String,
     /// Human readable name of your plugin
-    pub name: String,
+    name: String,
     /// Author name of your plugin
-    pub author: String,
+    author: String,
     /// Author contact information, like email
     #[serde(skip_serializing_if = "String::is_empty")]
-    pub contact: String,
+    contact: String,
     /// Description of your plugin
-    pub description: String,
+    description: String,
     /// URL of your plugin
     /// e.g. project homepage or repository
-    pub url: String,
+    url: String,
     /// Type of your plugin (e.g. Router(0) or Utilities(1))
     #[serde(rename = "type")]
-    pub plugin_type: PluginType,
+    plugin_type: PluginType,
     /// Major version of your plugin
-    pub version_major: u8,
+    version_major: u8,
     /// Minor version of your plugin
-    pub version_minor: u8,
+    version_minor: u8,
     /// Patch version of your plugin
-    pub version_patch: u8,
+    version_patch: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
@@ -88,16 +88,16 @@ impl serde::Serialize for PluginType {
 #[serde(rename_all = "snake_case")]
 pub struct StaticCaptureSettings {
     /// Static capture paths of your plugin, see Zoraxy documentation for more details
-    pub static_capture_paths: Vec<StaticCaptureRule>,
+    static_capture_paths: Vec<StaticCaptureRule>,
     /// Static capture ingress path of your plugin (e.g. `/s_handler`)
-    pub static_capture_ingress: String,
+    static_capture_ingress: String,
 }
 
 /// Static Capture Rule
 #[derive(serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub struct StaticCaptureRule {
-    pub capture_path: String,
+    capture_path: String,
 }
 
 /// Dynamic Capture Settings
@@ -110,9 +110,9 @@ pub struct StaticCaptureRule {
 #[serde(rename_all = "snake_case")]
 pub struct DynamicCaptureSettings {
     /// Dynamic capture sniff path of your plugin (e.g. `/d_sniff`)
-    pub dynamic_capture_sniff: String,
+    dynamic_capture_sniff: String,
     /// Dynamic capture ingress path of your plugin (e.g. `/d_handler`)
-    pub dynamic_capture_ingress: String,
+    dynamic_capture_ingress: String,
 }
 
 /// Subscriptions Settings
@@ -123,11 +123,11 @@ pub struct DynamicCaptureSettings {
 pub struct SubscriptionsSettings {
     /// Subscription event path of your plugin (e.g. `/notifyme`),
     /// a POST request with `SubscriptionEvent` as body will be sent to this path when the event is triggered
-    pub subscription_path: String,
+    subscription_path: String,
     /// Event subscriptions of your plugin,
     /// paired with comments describing how the event is used, see Zoraxy documentation for more details
     #[serde(rename = "subscriptions_events")]
-    pub event_subscriptions: HashMap<EventName, String>,
+    event_subscriptions: HashMap<EventName, String>,
 }
 
 /// Permitted API Endpoint
@@ -137,11 +137,11 @@ pub struct SubscriptionsSettings {
 #[serde(rename_all = "snake_case")]
 pub struct PermittedApiEndpoint {
     /// HTTP method for the API endpoint (e.g., GET, POST)
-    pub method: String,
+    method: String,
     ///The API endpoint that the plugin can access
-    pub endpoint: String,
+    endpoint: String,
     ///The reason why the plugin needs to access this endpoint
-    pub reason: Option<String>,
+    reason: Option<String>,
 }
 
 impl IntroSpect {
