@@ -63,10 +63,7 @@ async fn main() -> anyhow::Result<()> {
 
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
     tracing::info!("Event Subscriber Example Plugin UI ready at http://{addr}");
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app.with_state(state)).await?;
-
-    Ok(())
+    start_plugin(app, state, addr, Some("/ui")).await
 }
 
 #[debug_handler]

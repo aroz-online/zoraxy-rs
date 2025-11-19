@@ -29,9 +29,6 @@ async fn main() -> Result<()> {
     let app = Router::new().nest_service(UI_PATH_SLASH, ui_router.into_service());
 
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
-    let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!("Hello World UI ready at http://{}", addr);
-    axum::serve(listener, app).await?;
-
-    Ok(())
+    start_plugin(app, (), addr, Some(UI_PATH)).await
 }

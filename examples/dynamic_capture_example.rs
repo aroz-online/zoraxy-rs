@@ -67,11 +67,8 @@ async fn main() -> anyhow::Result<()> {
         .route(UI_PATH_SLASH, get(render_debug_ui));
 
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
-    let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!("Dynamic capture example listening on http://{addr}");
-    axum::serve(listener, app).await?;
-
-    Ok(())
+    start_plugin(app, (), addr, Some(UI_PATH)).await
 }
 
 async fn render_debug_ui(req: Request<Body>) -> Html<String> {

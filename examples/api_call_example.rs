@@ -63,10 +63,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/ui/", get(render_ui))
         .fallback(get(async |_: Request<Body>| Html("<h1>Not Found</h1>")));
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
-    let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!("API Call Example Plugin UI ready at http://{addr}");
-    axum::serve(listener, app.with_state(state)).await?;
-    Ok(())
+    start_plugin(app, state, addr, Some("/ui")).await
 }
 
 async fn allowed_endpoint(ctx: &Context) -> Result<String> {
