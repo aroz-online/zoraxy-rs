@@ -16,7 +16,7 @@ use anyhow::{Result, bail};
 /// # Errors
 /// * This function will return an error if -configure flag is not present
 /// * This function will return an error if deserialization of `ConfigureSpec` fails
-pub fn recv_configuration_spec(args: Vec<String>) -> Result<crate::types::ConfigureSpec> {
+pub(crate) fn recv_configuration_spec(args: Vec<String>) -> Result<crate::types::ConfigureSpec> {
     for (i, arg) in args.iter().enumerate() {
         if arg == "-configure" {
             let Some(spec_json) = args.into_iter().nth(i + 1) else {
@@ -53,7 +53,7 @@ pub fn recv_configuration_spec(args: Vec<String>) -> Result<crate::types::Config
 ///
 /// # Panics
 /// * This function will panic if serialization of `intro_spect` fails
-pub fn serve_intro_spect(
+pub(crate) fn serve_intro_spect(
     args: &[String],
     intro_spect: &crate::types::IntroSpect,
 ) -> Result<String> {

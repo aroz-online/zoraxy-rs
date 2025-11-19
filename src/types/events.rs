@@ -1,5 +1,5 @@
 use anyhow::Result;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(
@@ -155,5 +155,41 @@ impl<'de> Deserialize<'de> for Event {
             uuid: fields.uuid,
             data: payload,
         })
+    }
+}
+
+impl Serialize for Event {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(serde::Serialize)]
+        struct EventFields<'a> {
+            name: &'a EventName,
+            timestamp: i64,
+            uuid: &'a str,
+            data: &'a serde_json::Value,
+        }
+        let data_value = match &self.data {
+            EventPayload::BlacklistedIPBlocked(e) => {
+                serde_json::to_value(e).map_err(serde::ser::Error::custom)?
+            }
+            EventPayload::BlacklistToggled(e) => {
+                serde_json::to_value(e).map_err(serde::ser::Error::custom)?
+            }
+            EventPayload::AccessRuleCreated(e) => {
+                serde_json::to_value(e).map_err(serde::ser::Error::custom)?
+            }
+            EventPayload::Custom(e) => {
+                serde_json::to_value(e).map_err(serde::ser::Error::custom)?
+            }
+        };
+        let fields = EventFields {
+            name: &self.name,
+            timestamp: self.timestamp,
+            uuid: &self.uuid,
+            data: &data_value,
+        };
+        fields.serialize(serializer)
     }
 }

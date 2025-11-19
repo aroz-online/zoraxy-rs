@@ -16,7 +16,6 @@ fn introspect() -> IntroSpect {
         .with_id("org.aroz.zoraxy.api-call-example")
         .with_name("API Call Example Plugin")
         .with_author("Anthony Rubick")
-        .with_author("example@email.com")
         .with_description("An example plugin for making API calls")
         .with_url("https://zoraxy.aroz.org")
         .with_version((1, 0, 0));
@@ -41,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
 
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env().add_directive("into".parse()?),
+            tracing_subscriber::EnvFilter::from_default_env().add_directive("info".parse()?),
         )
         .with_writer(io::stderr)
         .init();
