@@ -8,13 +8,15 @@ use tracing_subscriber::EnvFilter;
 use zoraxy_rs::prelude::*;
 
 static WWW: include_dir::Dir = include_dir!("examples/helloworld_www");
-const UI_PATH: &str = "/";
+const UI_PATH: &str = "/ui";
+const UI_PATH_SLASH: &str = "/ui/";
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let metadata = PluginMetadata::new(PluginType::Utilities)
         .with_id("com.example.helloworld")
         .with_name("Hello World Plugin")
+        .with_description("A simple \"hello world\"")
         .with_author("foobar")
         .with_contact("foobar@example.com")
         .with_url("https://example.com")
@@ -23,11 +25,11 @@ async fn main() -> Result<()> {
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &intro_spect)?;
 
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("info".parse()?))
+        .with_env_filter(EnvFilter::from_default_env().add_directive("debug".parse()?))
         .init();
 
     let ui_router = Arc::new(PluginUiRouter::new(&WWW, "/"));
-    let app = Router::new().nest_service("/", ui_router.into_service());
+    let app = Router::new().nest_service(UI_PATH_SLASH, ui_router.into_service());
 
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
     let listener = tokio::net::TcpListener::bind(addr).await?;

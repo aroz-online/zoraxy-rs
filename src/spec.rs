@@ -176,6 +176,6 @@ mod tests {
         assert_eq!(config_spec.runtime_constants.zoraxy_uuid, "abcd-efgh-ijkl");
         assert!(config_spec.runtime_constants.development_build);
         assert_eq!(config_spec.api_key.unwrap(), "my_api_key");
-        assert_eq!(config_spec.zoraxy_port, 9090);
+        assert_eq!(config_spec.zoraxy_port.unwrap(), 9090);
     }
 }

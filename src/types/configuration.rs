@@ -14,7 +14,7 @@ pub struct ConfigureSpec {
     /// API key for accessing Zoraxy APIs, if the plugin has permitted endpoints
     pub api_key: Option<String>,
     /// The port that Zoraxy is running on, used for making API calls to Zoraxy
-    pub zoraxy_port: u16,
+    pub zoraxy_port: Option<u16>,
 }
 
 #[derive(serde::Deserialize, Debug, Clone)]

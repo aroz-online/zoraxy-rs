@@ -3,17 +3,21 @@ use std::net::SocketAddr;
 use axum::{
     Router,
     body::Body,
+    debug_handler,
     extract::State,
     handler::HandlerWithoutStateExt,
     http::Request,
     response::{Html, IntoResponse},
-    routing::get,
+    routing::{get, post},
 };
 use zoraxy_rs::prelude::*;
 
 const SNIFF_INGRESS: &str = "/d_sniff";
+const SNIFF_INGRESS_SLASH: &str = "/d_sniff/";
 const CAPTURE_INGRESS: &str = "/d_capture";
-const UI_PATH: &str = "/ui";
+const CAPTURE_INGRESS_SLASH: &str = "/d_capture/";
+const UI_PATH: &str = "/debug";
+const UI_PATH_SLASH: &str = "/debug/";
 
 fn instrospect() -> IntroSpect {
     let metadata = PluginMetadata::new(PluginType::Router)
@@ -30,6 +34,7 @@ fn instrospect() -> IntroSpect {
         .with_ui_path(UI_PATH)
 }
 
+#[debug_handler]
 async fn sniff(State(_): State<()>, sniff: DynamicSniffForwardRequest) -> SniffDecision {
     if sniff.request_uri.starts_with("/foobar") {
         tracing::info!("Sniffed request: {:?}", sniff);
@@ -53,14 +58,17 @@ async fn main() -> anyhow::Result<()> {
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &instrospect())?;
 
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env().add_directive("debug".parse()?),
+        )
         .init();
 
     let capture_service = DynamicCaptureService::new("/d_capture/", capture.into_service());
 
     let app = Router::new()
-        .route(SNIFF_INGRESS, get(sniff))
-        .nest_service(CAPTURE_INGRESS, capture_service);
+        .route(SNIFF_INGRESS_SLASH, post(sniff))
+        .nest_service(CAPTURE_INGRESS_SLASH, capture_service)
+        .route(UI_PATH_SLASH, get(render_debug_ui));
 
     let addr: SocketAddr = format!("127.0.0.1:{}", runtime_cfg.port).parse()?;
     let listener = tokio::net::TcpListener::bind(addr).await?;
@@ -68,4 +76,43 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+async fn render_debug_ui(req: Request<Body>) -> Html<String> {
+    let mut headers: Vec<_> = req
+        .headers()
+        .iter()
+        .map(|(name, value)| {
+            let value = value.to_str().unwrap_or("<non-utf8>");
+            format!("<li><strong>{name}</strong>: {value}</li>")
+        })
+        .collect();
+    headers.sort();
+
+    let body = format!(
+        r#"
+		<html>
+			<head>
+				<title>Zoraxy Static Capture Example</title>
+			</head>
+			<body>
+				<h1>Plugin UI Debug Interface</h1>
+				<h2>Received Headers</h2>
+				<ul>{}</ul>
+				<h2>Request Details</h2>
+				<ul>
+					<li><strong>Method:</strong> {}</li>
+					<li><strong>URI:</strong> {}</li>
+					<li><strong>Version:</strong> {:?}</li>
+				</ul>
+			</body>
+		</html>
+		"#,
+        headers.join(""),
+        req.method(),
+        req.uri(),
+        req.version()
+    );
+
+    Html(body)
 }

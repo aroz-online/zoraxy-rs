@@ -57,7 +57,9 @@ async fn main() -> anyhow::Result<()> {
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &introspect())?;
 
     tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::from_default_env().add_directive("debug".parse()?),
+        )
         .init();
 
     let mut path_router = StaticPathRouter::new(default_handler.into_service());
