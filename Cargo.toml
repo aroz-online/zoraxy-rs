@@ -13,6 +13,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
 tower = "0.5.1"
 tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
 include_dir = "0.7.4"
 mime_guess = "2.0.5"
 thiserror = "2.0.17"
@@ -23,7 +24,6 @@ chrono = "0.4.42"
 http-body-util = "0.1.2"
 pretty_assertions = "1.4.1"
 tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "fmt"] }
 reqwest = { version = "0.12.24", features = [ # don't bring in openssl
     "charset",
     "system-proxy",

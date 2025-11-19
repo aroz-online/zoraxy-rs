@@ -4,7 +4,6 @@ use std::sync::Arc;
 use anyhow::Result;
 use axum::Router;
 use include_dir::include_dir;
-use tracing_subscriber::EnvFilter;
 use zoraxy_rs::prelude::*;
 
 static WWW: include_dir::Dir = include_dir!("examples/helloworld_www");
@@ -24,9 +23,7 @@ async fn main() -> Result<()> {
     let intro_spect = IntroSpect::new(metadata).with_ui_path(UI_PATH);
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &intro_spect)?;
 
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("debug".parse()?))
-        .init();
+    init_tracing_subscriber(true);
 
     let ui_router = Arc::new(PluginUiRouter::new(&WWW, "/"));
     let app = Router::new().nest_service(UI_PATH_SLASH, ui_router.into_service());

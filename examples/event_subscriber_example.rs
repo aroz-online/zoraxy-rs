@@ -51,13 +51,7 @@ struct AppState {
 async fn main() -> anyhow::Result<()> {
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &instrospect())?;
 
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env().add_directive("debug".parse()?),
-        )
-        .without_time()
-        .with_ansi(false)
-        .init();
+    init_tracing_subscriber(true);
 
     let app = Router::new()
         .route("/ui/", get(render_ui))

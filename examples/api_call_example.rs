@@ -1,4 +1,3 @@
-use std::io;
 use std::net::SocketAddr;
 
 use anyhow::{Result, anyhow};
@@ -38,12 +37,7 @@ struct Context {
 async fn main() -> anyhow::Result<()> {
     let runtime_cfg = serve_and_recv_spec(std::env::args().collect(), &introspect())?;
 
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env().add_directive("info".parse()?),
-        )
-        .with_writer(io::stderr)
-        .init();
+    init_tracing_subscriber(false);
 
     let api_key = runtime_cfg
         .api_key
