@@ -8,7 +8,7 @@ description = "A Rust crate for building plugins for the Zoraxy Reverse Proxy"
 edition = "2024"
 license = "AGPL-3.0 and MIT"
 repository = "https://github.com/aroz-online/zoraxy-rs"
-categories = ["plugin", "web-server"]
+categories = ["web-programming"]
 homepage = "https://zoraxy.aroz.org/"
 
 
