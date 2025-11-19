@@ -288,7 +288,7 @@ impl DynamicCaptureSettings {
 #[serde(rename_all = "snake_case")]
 pub struct SubscriptionsSettings {
     /// Subscription event path of your plugin (e.g. `/notifyme`),
-    /// a POST request with `SubscriptionEvent` as body will be sent to this path when the event is triggered
+    /// a POST request with `Event` as body will be sent to this path when the event is triggered
     subscription_path: String,
     /// Event subscriptions of your plugin,
     /// paired with comments describing how the event is used, see Zoraxy documentation for more details
