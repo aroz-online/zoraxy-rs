@@ -47,6 +47,7 @@ pub struct PluginMetadata {
     /// Author name of your plugin
     pub author: String,
     /// Author contact information, like email
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub contact: String,
     /// Description of your plugin
     pub description: String,

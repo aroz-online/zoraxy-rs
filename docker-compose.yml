@@ -41,5 +41,3 @@ services:
     restart: unless-stopped
     volumes:
       - ./examples/helloworld_www/:/usr/share/nginx/html:ro
-    ports:
-      - 8081:80
