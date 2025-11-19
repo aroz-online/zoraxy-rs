@@ -36,114 +36,6 @@ pub struct IntroSpect {
     permitted_api_endpoints: Vec<PermittedApiEndpoint>,
 }
 
-#[derive(serde::Serialize, Debug, Clone)]
-pub struct PluginMetadata {
-    /// Unique ID of your plugin
-    /// recommended to use reverse domain name notation
-    /// e.g. "com.yourdomain.pluginname"
-    id: String,
-    /// Human readable name of your plugin
-    name: String,
-    /// Author name of your plugin
-    author: String,
-    /// Author contact information, like email
-    #[serde(skip_serializing_if = "String::is_empty")]
-    contact: String,
-    /// Description of your plugin
-    description: String,
-    /// URL of your plugin
-    /// e.g. project homepage or repository
-    url: String,
-    /// Type of your plugin (e.g. Router(0) or Utilities(1))
-    #[serde(rename = "type")]
-    plugin_type: PluginType,
-    /// Major version of your plugin
-    version_major: u8,
-    /// Minor version of your plugin
-    version_minor: u8,
-    /// Patch version of your plugin
-    version_patch: u8,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Copy)]
-#[repr(u8)]
-pub enum PluginType {
-    Router = 0,
-    Utilities = 1,
-}
-
-impl serde::Serialize for PluginType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_u8(*self as u8)
-    }
-}
-
-/// Static Capture Settings
-///
-/// Once plugin is enabled these rules always apply to the enabled HTTP Proxy rule
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "snake_case")]
-pub struct StaticCaptureSettings {
-    /// Static capture paths of your plugin, see Zoraxy documentation for more details
-    static_capture_paths: Vec<StaticCaptureRule>,
-    /// Static capture ingress path of your plugin (e.g. `/s_handler`)
-    static_capture_ingress: String,
-}
-
-/// Static Capture Rule
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "snake_case")]
-pub struct StaticCaptureRule {
-    capture_path: String,
-}
-
-/// Dynamic Capture Settings
-///
-/// Once plugin is enabled, these rules will be captured and forward to plugin sniff
-/// if the plugin sniff returns 280, the traffic will be captured
-/// otherwise, the traffic will be forwarded to the next plugin
-/// This is slower than static capture, but more flexible
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "snake_case")]
-pub struct DynamicCaptureSettings {
-    /// Dynamic capture sniff path of your plugin (e.g. `/d_sniff`)
-    dynamic_capture_sniff: String,
-    /// Dynamic capture ingress path of your plugin (e.g. `/d_handler`)
-    dynamic_capture_ingress: String,
-}
-
-/// Subscriptions Settings
-///
-/// Once plugin is enabled, Zoraxy will send subscription events to the plugin
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "snake_case")]
-pub struct SubscriptionsSettings {
-    /// Subscription event path of your plugin (e.g. `/notifyme`),
-    /// a POST request with `SubscriptionEvent` as body will be sent to this path when the event is triggered
-    subscription_path: String,
-    /// Event subscriptions of your plugin,
-    /// paired with comments describing how the event is used, see Zoraxy documentation for more details
-    #[serde(rename = "subscriptions_events")]
-    event_subscriptions: HashMap<EventName, String>,
-}
-
-/// Permitted API Endpoint
-///
-/// An API endpoint that the plugin is allowed to access
-#[derive(serde::Serialize, Debug, Clone)]
-#[serde(rename_all = "snake_case")]
-pub struct PermittedApiEndpoint {
-    /// HTTP method for the API endpoint (e.g., GET, POST)
-    method: String,
-    ///The API endpoint that the plugin can access
-    endpoint: String,
-    ///The reason why the plugin needs to access this endpoint
-    reason: Option<String>,
-}
-
 impl IntroSpect {
     /// Create a new `IntroSpect` with default values
     #[must_use]
@@ -199,6 +91,35 @@ impl IntroSpect {
         self.subscriptions = Some(subscriptions);
         self
     }
+}
+
+#[derive(serde::Serialize, Debug, Clone)]
+pub struct PluginMetadata {
+    /// Unique ID of your plugin
+    /// recommended to use reverse domain name notation
+    /// e.g. "com.yourdomain.pluginname"
+    id: String,
+    /// Human readable name of your plugin
+    name: String,
+    /// Author name of your plugin
+    author: String,
+    /// Author contact information, like email
+    #[serde(skip_serializing_if = "String::is_empty")]
+    contact: String,
+    /// Description of your plugin
+    description: String,
+    /// URL of your plugin
+    /// e.g. project homepage or repository
+    url: String,
+    /// Type of your plugin (e.g. Router(0) or Utilities(1))
+    #[serde(rename = "type")]
+    plugin_type: PluginType,
+    /// Major version of your plugin
+    version_major: u8,
+    /// Minor version of your plugin
+    version_minor: u8,
+    /// Patch version of your plugin
+    version_patch: u8,
 }
 
 impl PluginMetadata {
@@ -271,23 +192,32 @@ impl PluginMetadata {
     }
 }
 
-impl PermittedApiEndpoint {
-    /// Create a new `PermittedApiEndpoint` with default values
-    #[must_use]
-    pub fn new<S: AsRef<str>>(method: S, endpoint: S) -> Self {
-        Self {
-            method: method.as_ref().to_string(),
-            endpoint: endpoint.as_ref().to_string(),
-            reason: None,
-        }
-    }
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[repr(u8)]
+pub enum PluginType {
+    Router = 0,
+    Utilities = 1,
+}
 
-    /// Set the reason of the `PermittedApiEndpoint`
-    #[must_use]
-    pub fn with_reason<S: AsRef<str>>(mut self, reason: S) -> Self {
-        self.reason = Some(reason.as_ref().to_string());
-        self
+impl serde::Serialize for PluginType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u8(*self as u8)
     }
+}
+
+/// Static Capture Settings
+///
+/// Once plugin is enabled these rules always apply to the enabled HTTP Proxy rule
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct StaticCaptureSettings {
+    /// Static capture paths of your plugin, see Zoraxy documentation for more details
+    static_capture_paths: Vec<StaticCaptureRule>,
+    /// Static capture ingress path of your plugin (e.g. `/s_handler`)
+    static_capture_ingress: String,
 }
 
 impl StaticCaptureSettings {
@@ -308,6 +238,13 @@ impl StaticCaptureSettings {
     }
 }
 
+/// Static Capture Rule
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct StaticCaptureRule {
+    capture_path: String,
+}
+
 impl StaticCaptureRule {
     /// Create a new `StaticCaptureRule` with default values
     #[must_use]
@@ -316,6 +253,47 @@ impl StaticCaptureRule {
             capture_path: capture_path.as_ref().to_string(),
         }
     }
+}
+
+/// Dynamic Capture Settings
+///
+/// Once plugin is enabled, these rules will be captured and forward to plugin sniff
+/// if the plugin sniff returns 280, the traffic will be captured
+/// otherwise, the traffic will be forwarded to the next plugin
+/// This is slower than static capture, but more flexible
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct DynamicCaptureSettings {
+    /// Dynamic capture sniff path of your plugin (e.g. `/d_sniff`)
+    dynamic_capture_sniff: String,
+    /// Dynamic capture ingress path of your plugin (e.g. `/d_handler`)
+    dynamic_capture_ingress: String,
+}
+
+impl DynamicCaptureSettings {
+    /// Create a new `DynamicCaptureSettings` with default values
+    #[must_use]
+    pub fn new<S: AsRef<str>>(dynamic_capture_sniff: S, dynamic_capture_ingress: S) -> Self {
+        Self {
+            dynamic_capture_sniff: dynamic_capture_sniff.as_ref().to_string(),
+            dynamic_capture_ingress: dynamic_capture_ingress.as_ref().to_string(),
+        }
+    }
+}
+
+/// Subscriptions Settings
+///
+/// Once plugin is enabled, Zoraxy will send subscription events to the plugin
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct SubscriptionsSettings {
+    /// Subscription event path of your plugin (e.g. `/notifyme`),
+    /// a POST request with `SubscriptionEvent` as body will be sent to this path when the event is triggered
+    subscription_path: String,
+    /// Event subscriptions of your plugin,
+    /// paired with comments describing how the event is used, see Zoraxy documentation for more details
+    #[serde(rename = "subscriptions_events")]
+    event_subscriptions: HashMap<EventName, String>,
 }
 
 impl SubscriptionsSettings {
@@ -340,13 +318,35 @@ impl SubscriptionsSettings {
         self
     }
 }
-impl DynamicCaptureSettings {
-    /// Create a new `DynamicCaptureSettings` with default values
+/// Permitted API Endpoint
+///
+/// An API endpoint that the plugin is allowed to access
+#[derive(serde::Serialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct PermittedApiEndpoint {
+    /// HTTP method for the API endpoint (e.g., GET, POST)
+    method: String,
+    ///The API endpoint that the plugin can access
+    endpoint: String,
+    ///The reason why the plugin needs to access this endpoint
+    reason: Option<String>,
+}
+
+impl PermittedApiEndpoint {
+    /// Create a new `PermittedApiEndpoint` with default values
     #[must_use]
-    pub fn new<S: AsRef<str>>(dynamic_capture_sniff: S, dynamic_capture_ingress: S) -> Self {
+    pub fn new<S: AsRef<str>>(method: S, endpoint: S) -> Self {
         Self {
-            dynamic_capture_sniff: dynamic_capture_sniff.as_ref().to_string(),
-            dynamic_capture_ingress: dynamic_capture_ingress.as_ref().to_string(),
+            method: method.as_ref().to_string(),
+            endpoint: endpoint.as_ref().to_string(),
+            reason: None,
         }
+    }
+
+    /// Set the reason of the `PermittedApiEndpoint`
+    #[must_use]
+    pub fn with_reason<S: AsRef<str>>(mut self, reason: S) -> Self {
+        self.reason = Some(reason.as_ref().to_string());
+        self
     }
 }
