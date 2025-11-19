@@ -124,9 +124,10 @@ pub struct SubscriptionsSettings {
     /// Subscription event path of your plugin (e.g. `/notifyme`),
     /// a POST request with `SubscriptionEvent` as body will be sent to this path when the event is triggered
     pub subscription_path: String,
-    /// Subscriptions events of your plugin,
+    /// Event subscriptions of your plugin,
     /// paired with comments describing how the event is used, see Zoraxy documentation for more details
-    pub subscription_events: HashMap<EventName, String>,
+    #[serde(rename = "subscriptions_events")]
+    pub event_subscriptions: HashMap<EventName, String>,
 }
 
 /// Permitted API Endpoint
@@ -323,18 +324,18 @@ impl SubscriptionsSettings {
     pub fn new<S: AsRef<str>>(subscription_path: S) -> Self {
         Self {
             subscription_path: subscription_path.as_ref().to_string(),
-            subscription_events: HashMap::new(),
+            event_subscriptions: HashMap::new(),
         }
     }
 
     /// Add a subscription event to the `SubscriptionsSettings`
     #[must_use]
-    pub fn add_subscription_event<S: AsRef<str>>(
+    pub fn add_event_subscription<S: AsRef<str>>(
         mut self,
         event: EventName,
         description: S,
     ) -> Self {
-        self.subscription_events
+        self.event_subscriptions
             .insert(event, description.as_ref().to_string());
         self
     }
